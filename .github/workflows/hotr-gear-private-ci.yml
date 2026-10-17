@@ -1,9 +1,13 @@
 name: HOTR pinned private Gear CI
 
-# Public runner / private source; manual only.
-# Private checkout requires a functioning HOTR_PUBLIC_TOKEN Actions repository secret.
-# No automatic failing runs while credential access remains unresolved.
+# Public runner / private source; workflow changes on public main trigger validation.
+# Private checkout requires HOTR_PUBLIC_TOKEN Actions repository secret.
+# No external PR triggers or private source publication.
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/hotr-gear-private-ci.yml"
   workflow_dispatch:
     inputs:
       source_sha:
