@@ -1,6 +1,7 @@
 name: HOTR pinned private Gear CI
 
 # Public runner / private source. Only protected main pushes and manual dispatch; no PR execution.
+# Fresh run after HOTR_PUBLIC_TOKEN configuration (do not rerun failed original run).
 on:
   push:
     branches: [main]
