@@ -14,7 +14,7 @@ on:
         description: "Exact 40-character commit SHA from private Heroes-Of-The-Rim"
         required: true
         type: string
-        default: "4552d47867391c3e2546d1427ccdc3a2b84ad180"
+        default: "def5953d0183c94eb830b5e98a7af275b2cc31d7"
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Validate pinned SHA and configured secret
         env:
-          SOURCE_SHA: ${{ inputs.source_sha || '4552d47867391c3e2546d1427ccdc3a2b84ad180' }}
+          SOURCE_SHA: ${{ inputs.source_sha || 'def5953d0183c94eb830b5e98a7af275b2cc31d7' }}
           PRIVATE_TOKEN: ${{ secrets.HOTR_PUBLIC_TOKEN }}
         shell: bash
         run: |
@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sidious92/Heroes-Of-The-Rim
-          ref: ${{ inputs.source_sha || '4552d47867391c3e2546d1427ccdc3a2b84ad180' }}
+          ref: ${{ inputs.source_sha || 'def5953d0183c94eb830b5e98a7af275b2cc31d7' }}
           token: ${{ secrets.HOTR_PUBLIC_TOKEN }}
           persist-credentials: false
           show-progress: false
