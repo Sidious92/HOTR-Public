@@ -14,7 +14,7 @@ on:
         description: "Exact 40-character commit SHA from private Heroes-Of-The-Rim"
         required: true
         type: string
-        default: "def5953d0183c94eb830b5e98a7af275b2cc31d7"
+        default: "ae10b21e5a898fa3525afaabb0269d8049d2ae75"
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Validate pinned SHA and configured secret
         env:
-          SOURCE_SHA: ${{ inputs.source_sha || 'def5953d0183c94eb830b5e98a7af275b2cc31d7' }}
+          SOURCE_SHA: ${{ inputs.source_sha || 'ae10b21e5a898fa3525afaabb0269d8049d2ae75' }}
           PRIVATE_TOKEN: ${{ secrets.HOTR_PUBLIC_TOKEN }}
         shell: bash
         run: |
@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sidious92/Heroes-Of-The-Rim
-          ref: ${{ inputs.source_sha || 'def5953d0183c94eb830b5e98a7af275b2cc31d7' }}
+          ref: ${{ inputs.source_sha || 'ae10b21e5a898fa3525afaabb0269d8049d2ae75' }}
           token: ${{ secrets.HOTR_PUBLIC_TOKEN }}
           persist-credentials: false
           show-progress: false
@@ -78,6 +78,7 @@ jobs:
             fi
           }
           private_step regression python -m unittest discover -s tests -p test_gear_*.py -v
+          private_step alpha-character python -m unittest discover -s tests -p test_t1_alpha_character.py -v
           private_step export python tools/export_gear_catalog.py --output "$RUNNER_TEMP/hotr-private-catalogue.json"
           private_step verify python -c '
           import json, os
