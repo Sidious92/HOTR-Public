@@ -1,0 +1,100 @@
+name: HOTR pinned private Gear CI
+
+# Public runner / private source. Manually invoked only; no untrusted PR execution.
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: "Exact 40-character commit SHA from private Heroes-Of-The-Rim"
+        required: true
+        type: string
+        default: "0b1f3efa900d1d07dd5ae5de6dcffee21989b51a"
+      token_secret_name:
+        description: "Name of EXISTING Actions secret in HOTR-Public (not its value)"
+        required: true
+        type: string
+        default: "HOTR_READ_TOKEN"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hotr-private-gear-ci
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate private taxonomy export
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate pinned SHA and configured secret
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          PRIVATE_TOKEN: ${{ secrets[inputs.token_secret_name] }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Provide an exact private commit SHA (40 hex characters)"
+            exit 1
+          fi
+          if [[ -z "$PRIVATE_TOKEN" ]]; then
+            echo "::error::The selected GitHub Actions secret is unavailable. Enter the EXISTING secret NAME in the workflow form, not the token."
+            exit 1
+          fi
+          echo "Immutable source commit and read token: configured"
+
+      - name: Checkout exact private source without persisting token
+        uses: actions/checkout@v4
+        with:
+          repository: Sidious92/Heroes-Of-The-Rim
+          ref: ${{ inputs.source_sha }}
+          token: ${{ secrets[inputs.token_secret_name] }}
+          persist-credentials: false
+          show-progress: false
+          fetch-depth: 1
+          path: private-workspace
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Gear export tests and verify JSON privately
+        shell: bash
+        working-directory: private-workspace
+        run: |
+          set -euo pipefail
+          private_step() {
+            local step_name="$1"
+            shift
+            if "$@" > "$RUNNER_TEMP/hotr-${step_name}.log" 2>&1; then
+              echo "${step_name}: passed"
+            else
+              echo "::error::${step_name}: failed (private diagnostic output withheld from public logs)"
+              exit 1
+            fi
+          }
+          private_step regression python -m unittest discover -s tests -p test_gear_export.py -v
+          private_step export python tools/export_gear_catalog.py --output "$RUNNER_TEMP/hotr-private-catalogue.json"
+          private_step verify python -c '
+          import json, os
+          from pathlib import Path
+          p = Path(os.environ["RUNNER_TEMP"]) / "hotr-private-catalogue.json"
+          d = json.loads(p.read_text(encoding="utf-8"))
+          ids = [row["category_id"] for row in d["categories"]]
+          assert d["authority"] == "CATALOGUE_ONLY_NOT_ITEM_PROFILES"
+          assert d["total_categories"] == len(ids) == len(set(ids)) == 1932
+          for item in ("GEAR/01/01.01", "GEAR/02/A01", "GEAR/06/ARM-01/01.01"):
+              assert item in ids
+          '
+          echo "Gear source identity, ID uniqueness and quantity: passed"
+
+      - name: Remove private checkout and temporary logs
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/private-workspace"
+          rm -f "$RUNNER_TEMP"/hotr-*.log "$RUNNER_TEMP/hotr-private-catalogue.json"
+          echo "Temporary private workspace removed"
