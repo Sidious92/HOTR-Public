@@ -78,7 +78,11 @@ jobs:
             fi
           }
           private_step regression python -m unittest discover -s tests -p test_gear_*.py -v
-          private_step alpha-character python -m unittest discover -s tests -p test_t1_alpha_character.py -v
+          if [[ -f tests/test_t1_alpha_character.py ]]; then
+            private_step alpha-character python -m unittest discover -s tests -p test_t1_alpha_character.py -v
+          else
+            echo "alpha-character: not present at pinned private SHA; skipped"
+          fi
           private_step gear-world python tools/gear_world.py --check
           private_step weapon-profiles python tools/check_weapon_playtest_profiles.py --json
           private_step gear-starter python tools/gear_models.py --check
