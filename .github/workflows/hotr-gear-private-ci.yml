@@ -1,4 +1,4 @@
-name: HOTR pinned private Gear CI
+name: HOTR private Gear & Kit CI (public runner)
 
 # Public runner / private source; workflow changes on public main trigger validation.
 # Private checkout requires HOTR_PUBLIC_TOKEN Actions repository secret.
@@ -14,7 +14,7 @@ on:
         description: "Exact 40-character commit SHA from private Heroes-Of-The-Rim"
         required: true
         type: string
-        default: "ae10b21e5a898fa3525afaabb0269d8049d2ae75"
+        default: "3527311cf04d6d325aa97474a19fcc051d91fdd4"
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Validate pinned SHA and configured secret
         env:
-          SOURCE_SHA: ${{ inputs.source_sha || 'ae10b21e5a898fa3525afaabb0269d8049d2ae75' }}
+          SOURCE_SHA: ${{ inputs.source_sha || '3527311cf04d6d325aa97474a19fcc051d91fdd4' }}
           PRIVATE_TOKEN: ${{ secrets.HOTR_PUBLIC_TOKEN }}
         shell: bash
         run: |
@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sidious92/Heroes-Of-The-Rim
-          ref: ${{ inputs.source_sha || 'ae10b21e5a898fa3525afaabb0269d8049d2ae75' }}
+          ref: ${{ inputs.source_sha || '3527311cf04d6d325aa97474a19fcc051d91fdd4' }}
           token: ${{ secrets.HOTR_PUBLIC_TOKEN }}
           persist-credentials: false
           show-progress: false
@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run Gear export tests and verify JSON privately
+      - name: Run Gear, Kit and scenario validations privately
         shell: bash
         working-directory: private-workspace
         run: |
@@ -79,6 +79,12 @@ jobs:
           }
           private_step regression python -m unittest discover -s tests -p test_gear_*.py -v
           private_step alpha-character python -m unittest discover -s tests -p test_t1_alpha_character.py -v
+          private_step gear-world python tools/gear_world.py --check
+          private_step weapon-profiles python tools/check_weapon_playtest_profiles.py --json
+          private_step gear-starter python tools/gear_models.py --check
+          private_step kit-boms python tools/validate_gear_kits.py --check
+          private_step kit-challenger python tools/kit_functional_challenger.py
+          private_step kit-scenarios python tools/run_kit_playtest_scenarios.py --check
           private_step export python tools/export_gear_catalog.py --output "$RUNNER_TEMP/hotr-private-catalogue.json"
           private_step verify python -c '
           import json, os
