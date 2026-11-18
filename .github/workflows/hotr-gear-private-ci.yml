@@ -14,7 +14,7 @@ on:
         description: "Exact 40-character commit SHA from private Heroes-Of-The-Rim"
         required: true
         type: string
-        default: "3527311cf04d6d325aa97474a19fcc051d91fdd4"
+        default: "75c4745de75b7b271bd52c744e9df22e41aaefb5"
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Validate pinned SHA and configured secret
         env:
-          SOURCE_SHA: ${{ inputs.source_sha || '3527311cf04d6d325aa97474a19fcc051d91fdd4' }}
+          SOURCE_SHA: ${{ inputs.source_sha || '75c4745de75b7b271bd52c744e9df22e41aaefb5' }}
           PRIVATE_TOKEN: ${{ secrets.HOTR_PUBLIC_TOKEN }}
         shell: bash
         run: |
@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sidious92/Heroes-Of-The-Rim
-          ref: ${{ inputs.source_sha || '3527311cf04d6d325aa97474a19fcc051d91fdd4' }}
+          ref: ${{ inputs.source_sha || '75c4745de75b7b271bd52c744e9df22e41aaefb5' }}
           token: ${{ secrets.HOTR_PUBLIC_TOKEN }}
           persist-credentials: false
           show-progress: false
@@ -89,6 +89,7 @@ jobs:
           private_step kit-boms python tools/validate_gear_kits.py --check
           private_step kit-challenger python tools/kit_functional_challenger.py
           private_step kit-scenarios python tools/run_kit_playtest_scenarios.py --check
+          private_step repair-host python tools/repair_host_bridge.py
           private_step export python tools/export_gear_catalog.py --output "$RUNNER_TEMP/hotr-private-catalogue.json"
           private_step verify python -c '
           import json, os
